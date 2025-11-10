@@ -1,0 +1,2 @@
+{:system
+ {:tutorial.print/hello {}}}

@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      # Mount source for development (comment out for production)
+      - ./src:/app/src
+      - ./duct.edn:/app/duct.edn
+      # Persist the SQLite database
+      - ./test.db:/app/test.db
+    environment:
+      # Add environment variables as needed
+      - CLOJURE_ENV=development
+    restart: unless-stopped
+
+  # PostgreSQL database (optional - uncomment if needed)
+  # postgres:
+  #   image: postgres:16-alpine
+  #   environment:
+  #     POSTGRES_DB: cloj_sql_lab
+  #     POSTGRES_USER: developer
+  #     POSTGRES_PASSWORD: devpassword
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   restart: unless-stopped
+
+# Volumes for data persistence
+# volumes:
+#   postgres_data:
+

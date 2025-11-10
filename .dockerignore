@@ -1,0 +1,40 @@
+# Git and version control
+.git
+.gitignore
+
+# IDE and editor files
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.calva
+.lsp
+.clj-kondo
+
+# Build artifacts and caches
+.cpcache
+target
+.nrepl-port
+.rebel_readline_history
+
+# Documentation
+*.md
+README.md
+readme.md
+
+# Docker files
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Test files (uncomment if you don't want tests in the image)
+# test/
+
