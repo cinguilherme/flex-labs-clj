@@ -4,6 +4,7 @@
             [io.pedestal.http.route :as route]
             [io.pedestal.interceptor :as interceptor]
             [io.pedestal.http.body-params :as body-params]
+            [clojure.data.json :as json]
             [tutorial.db :as db]
             [tutorial.logger :as log]
             [tutorial.http.content-negotiation :as cn]))
@@ -63,28 +64,20 @@
     response))
 
 (defn get-users-handler [request]
-  (log-debug "=== GET-USERS-HANDLER CALLED ===")
   (try
     (let [database (:database request)
           logger (:logger request)]
-      (log-debug (str "Has database: " (some? database)))
-      (log-debug (str "Has logger: " (some? logger)))
       (when logger
         (log/info logger :http/get-users-called {:has-database (some? database)}))
       (if-not database
         {:status 500
          :body "Database not available"}
         (let [users (db/get-all-users (:datasource database))]
-          (log-debug (str "Users count: " (count users)))
-          (log-debug (str "Users type: " (type users)))
           (when logger
             (log/info logger :http/get-users {:count (count users)}))
-          (let [response {:status 200
-                         :body users}]
-            (log-debug (str "Handler returning response: " (pr-str response)))
-            response))))
+          ;; Use content negotiation helper
+          (cn/format-response request users))))
     (catch Exception e
-      (log-debug (str "ERROR in handler: " (.getMessage e)))
       (println "ERROR in get-users-handler:" (.getMessage e))
       (.printStackTrace e)
       {:status 500
@@ -98,8 +91,7 @@
     (when logger
       (log/info logger :http/get-user {:id id :found (some? user)}))
     (if user
-      {:status 200
-       :body user}
+      (cn/format-response request user)
       (not-found))))
 
 (defn create-user-handler [request]
@@ -110,16 +102,16 @@
       (when logger
         (log/info logger :http/create-user {:email email}))
       (db/insert-user! (:datasource database) {:name name :email email} (:logger database))
-      {:status 200
-       :body {:message "User created"}}
+      (cn/format-response request {:message "User created"})
       (catch clojure.lang.ExceptionInfo e
         (if (= (:type (ex-data e)) :tutorial.db/validation-error)
           (do
             (when logger
               (log/info logger :http/validation-error {:errors (:errors (ex-data e))}))
             {:status 400
-             :body {:error "Validation failed"
-                    :details (:errors (ex-data e))}})
+             :headers {"Content-Type" "application/json"}
+             :body (json/write-str {:error "Validation failed"
+                                    :details (:errors (ex-data e))})})
           (throw e))))))
 
 
@@ -143,9 +135,7 @@
                        ::http/join? false}
         server-instance (-> server-config
                             http/default-interceptors
-                            (update ::http/interceptors concat [(component-interceptor database logger)
-                                                                  cn/negotiate-content
-                                                                  #_cn/coerce-body])
+                            (update ::http/interceptors concat [(component-interceptor database logger)])
                             http/create-server)]
     (when logger
       (log/info logger :http/server-starting {:port actual-port}))
