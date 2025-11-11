@@ -1,0 +1,11 @@
+{:lint-as {duct.test/with-system clojure.core/let
+            hugsql.core/def-db-fns clojure.core/declare}
+ :linters {:unresolved-symbol {:exclude [(with-system [& _])
+                                         (create-users-table!)
+                                         (insert-user!)
+                                         (get-user-by-id)
+                                         (get-all-users)
+                                         (delete-user!)
+                                         (update-user!)]}
+           :unresolved-var {:exclude [tutorial.db]}}}
+

@@ -1,2 +1,8 @@
 {:system
- {:tutorial.print/hello {}}}
+ {:tutorial.print/hello {}
+  :tutorial.logger/logger {:type :file
+                            :log-file "./logs/logs.txt"}
+  :tutorial.db/database {:logger #ig/ref :tutorial.logger/logger}
+  :tutorial.http/server {:database #ig/ref :tutorial.db/database
+                          :logger #ig/ref :tutorial.logger/logger
+                          :port 8080}}}
